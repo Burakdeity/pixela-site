@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pixela · Burak · Web, mobil ve özel yazılım</title>
+<meta name="description" content="Pixela, Burak'ın yazılım stüdyosu. Sıradan olmayan web siteleri, mobil uygulamalar ve işine özel yazılımlar; aracısız ve uygun fiyatla.">
+<meta name="theme-color" content="#FFD600">
+<meta property="og:title" content="Pixela · Sen hayal et, ben kodlayayım">
+<meta property="og:description" content="Web, mobil ve özel yazılım. Ajans masrafı yok, tek muhatap var: Burak.">
+<meta property="og:type" content="website">
+<!-- DEPLOY STEP: og:image ve og:url canlı adresle (https://...) değiştirilecek -->
+<meta property="og:url" content="https://pixela.example/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 7'%3E%3Crect width='7' height='7' rx='1.4' fill='%23FFD600'/%3E%3Cpath fill='%23101010' d='M1.5 1.5h3v1h-3zM1.5 2.5h1v3h-1zM3.5 2.5h1v1h-1zM2.5 3.5h2v1h-2z'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script type="importmap">{"imports":{"three":"./assets/vendor/three.module.min.js"}}</script>
+</head>
+<body>
+<a class="skip" href="#main">İçeriğe geç</a>
+
+<!-- Açılış: siyah ekranda sarı pikseller -->
+<div class="cursor" id="cursor" aria-hidden="true"><span class="cursor-label" id="cursor-label"></span></div>
+<div class="grain" aria-hidden="true"></div>
+<div class="progress" id="progress" aria-hidden="true"></div>
+<canvas class="trail" id="trail" aria-hidden="true"></canvas>
+
+<div id="loader" aria-hidden="true">
+  <div class="ld-mark">
+    <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+  </div>
+  <p class="ld-num"><span id="ld-num">0</span></p>
+</div>
+
+<!-- Üst menü: fark karışım modu, sarı zeminde siyah, siyah zeminde sarı görünür -->
+<nav class="header" id="header" aria-label="Ana menü">
+  <div class="header-inner">
+    <a href="#top" class="logo" aria-label="Pixela ana sayfa">
+      <svg viewBox="0 0 40 40" aria-hidden="true"><rect x="2" y="2" width="11" height="11" rx="3.5"/><rect x="14.5" y="2" width="11" height="11" rx="3.5"/><rect x="27" y="2" width="11" height="11" rx="3.5"/><rect x="2" y="14.5" width="11" height="11" rx="3.5"/><rect x="27" y="14.5" width="11" height="11" rx="3.5"/><rect x="2" y="27" width="11" height="11" rx="3.5"/><rect x="14.5" y="14.5" width="11" height="11" rx="3.5"/></svg>
+    </a>
+    <a href="#top" class="globe" aria-hidden="true" tabindex="-1">
+      <span class="pixmorph" id="pixmorph"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+    </a>
+    <div class="links">
+      <a class="pill" href="#isler"><span>Çözümler</span></a>
+      <a class="pill" href="#hizmetler"><span>Hizmetler</span></a>
+      <a class="pill" href="#iletisim"><span>İletişim</span></a>
+    </div>
+    <button class="menu-btn" id="menu-btn" aria-expanded="false" aria-controls="overlay" aria-label="Menüyü aç"><span></span><span></span></button>
+  </div>
+</nav>
+<div class="overlay" id="overlay" hidden>
+  <div class="overlay-inner">
+    <a href="#isler">Çözümler</a>
+    <a href="#biz">Hakkımda</a>
+    <a href="#hizmetler">Hizmetler</a>
+    <a href="#surec">Süreç</a>
+    <a href="#iletisim">İletişim</a>
+  </div>
+</div>
+
+<main id="main" tabindex="-1">
+
+  <!-- ============ HERO: sarı zemin, 3D piksel logo ============ -->
+  <!-- Ekrana dalış: giriş kaydırırken sabit kalır, kamera konsolun ekranına uçar, ekran showreel olur -->
+  <div class="dive" id="dive">
+  <section class="hero" id="top">
+    <div class="hero-grid" aria-hidden="true"></div>
+    <canvas id="logo3d" aria-hidden="true"></canvas>
+    <a href="#iletisim" class="badge" aria-label="İletişime geç">
+      <svg viewBox="0 0 120 120" aria-hidden="true">
+        <defs><path id="badge-circle" d="M60,60 m-46,0 a46,46 0 1,1 92,0 a46,46 0 1,1 -92,0"/></defs>
+        <text><textPath href="#badge-circle" textLength="289">DİJİTAL STÜDYO · PİKSEL PİKSEL · 2026 · </textPath></text>
+      </svg>
+      <span class="badge-core"><svg viewBox="0 0 40 40" aria-hidden="true"><rect x="2" y="2" width="11" height="11" rx="3.5"/><rect x="14.5" y="2" width="11" height="11" rx="3.5"/><rect x="27" y="2" width="11" height="11" rx="3.5"/><rect x="2" y="14.5" width="11" height="11" rx="3.5"/><rect x="27" y="14.5" width="11" height="11" rx="3.5"/><rect x="2" y="27" width="11" height="11" rx="3.5"/><rect x="14.5" y="14.5" width="11" height="11" rx="3.5"/></svg></span>
+    </a>
+    <h1 class="tagline"><span class="mask"><span>Sen hayal et,</span></span><span class="mask"><span>ben kodlayayım.</span></span></h1>
+    <div class="hero-foot">
+      <p class="typer" aria-hidden="true"><span class="typer-pr">&gt;</span> <span id="typer"></span><i class="typer-caret"></i></p>
+      <a href="#reel" class="down" aria-label="Aşağı kaydır">
+        <svg viewBox="0 0 36 36" aria-hidden="true"><rect x="7" y="7" width="22" height="22" rx="3" transform="rotate(45 18 18)"/></svg>
+      </a>
+      <p class="hero-copy">Web · Mobil · Özel yazılım</p>
+    </div>
+  </section>
+  </div>
+
+  <!-- ============ REEL: kaydırdıkça açılan siyah sahne ============ -->
+  <section class="reel" id="reel">
+    <div class="reel-sticky" id="reel-sticky">
+      <div class="reel-frame" id="reel-frame">
+        <!-- Showreel: sırayla dönen gerçek videolar (assets/reel). Kendi proje videoların gelince buraya eklenir. -->
+        <video class="rv on" id="rv-a" muted playsinline preload="none" aria-hidden="true" tabindex="-1"></video>
+        <video class="rv" id="rv-b" muted playsinline preload="none" aria-hidden="true" tabindex="-1"></video>
+        <canvas class="reel-pix" id="reel-pix" aria-hidden="true"></canvas>
+        <div class="reel-shade" aria-hidden="true"></div>
+        <div class="reel-ui">
+          <div class="reel-bars" id="reel-bars" aria-hidden="true"></div>
+          <span class="reel-tag">Showreel</span>
+          <span class="reel-count" aria-hidden="true"><span id="reel-idx">01</span> / <span id="reel-total">04</span></span>
+          <div class="reel-bottom">
+            <span class="reel-kicker" id="reel-kicker">Kurumsal · Tanıtım</span>
+            <span class="reel-label" id="reel-label" aria-live="polite">Web siteleri</span>
+          </div>
+          <button class="reel-next" id="reel-next" type="button" aria-label="Sonraki video"><span aria-hidden="true">→</span></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ BİZ KİMİZ + PROJE IZGARASI ============ -->
+  <section class="grid-sec" id="biz">
+    <div class="copyblock">
+      <div class="titlewrap">
+        <p class="subtitle">Ben kimim</p>
+        <h2 class="title" id="who">
+          <span class="ln ln-r">BEN BURAK.</span>
+          <span class="ln">FİKİRLERİ</span>
+          <span class="ln">ÖZGÜN DİJİTAL</span>
+          <span class="ln">ÜRÜNLERE</span>
+          <span class="ln">DÖNÜŞTÜRÜYORUM.</span>
+          <span class="ln">ŞABLON YOK,</span>
+          <span class="ln">HAZIR TEMA YOK.</span>
+        </h2>
+      </div>
+      <p class="copy">Tasarımdan yayına kadar her aşamayı bizzat yönetiyorum. Arada ajans ya da aracı olmadığı için fiyatlarım uygun ve projenin tek muhatabı benim. Yazdığım her satır kod senin olur.</p>
+    </div>
+
+    <!-- NELER YAPABİLİRİZ: konsept kartlar. Gerçek projeler olunca adı, yılı ve ekran görüntüsüyle değiştirilecek. -->
+    <div class="caps" id="isler">
+      <div class="caps-head">
+        <div>
+          <p class="caps-kicker">Neler yapabilirim <sup>(06)</sup></p>
+          <h2 class="caps-title">Fikrin hangi<br>ekranda yaşayacak?</h2>
+        </div>
+        <div class="caps-side">
+          <p class="caps-lede">Aşağıdakiler konsept çalışmalarım. Birine tıkla, WhatsApp'tan fiyatı ve süreyi hemen konuşalım.</p>
+          <div class="caps-filter" role="group" aria-label="Kategoriye göre süz">
+            <button type="button" class="on" data-f="all">Hepsi</button>
+            <button type="button" data-f="web">Web</button>
+            <button type="button" data-f="mobil">Mobil</button>
+            <button type="button" data-f="panel">Panel</button>
+            <button type="button" data-f="ticaret">E-ticaret</button>
+          </div>
+        </div>
+      </div>
+      <div class="cgrid">
+      <a class="ccard cc-randevu" href="#iletisim" data-cat="web panel" data-wa="Randevu sistemi" style="--c:#ff4fd8">
+        <div class="cc-screen"><canvas data-scene="randevu" aria-hidden="true"></canvas></div>
+        <div class="cc-body">
+          <div class="cc-top"><span class="cc-sub">01 · Konsept</span><span class="cc-arrow"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M9 6h9v9" fill="none" stroke="currentColor" stroke-width="2.4"/></svg></span></div>
+          <h3 class="cc-title">Randevu sistemi</h3>
+          <p class="cc-desc">Müşterin saatini seçer, onay SMS’i otomatik gider. Sen sadece takvime bakarsın.</p>
+          <div class="cc-tags"><span>Web</span><span>Panel</span><span>SMS</span></div>
+        </div>
+      </a>
+      <a class="ccard cc-magaza" href="#iletisim" data-cat="web ticaret" data-wa="Online mağaza" style="--c:#3db7ff">
+        <div class="cc-screen"><canvas data-scene="magaza" aria-hidden="true"></canvas></div>
+        <div class="cc-body">
+          <div class="cc-top"><span class="cc-sub">02 · Konsept</span><span class="cc-arrow"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M9 6h9v9" fill="none" stroke="currentColor" stroke-width="2.4"/></svg></span></div>
+          <h3 class="cc-title">Online mağaza</h3>
+          <p class="cc-desc">Ürün, stok, ödeme ve kargo tek yerde. İlk günden satış.</p>
+          <div class="cc-tags"><span>E-ticaret</span><span>Ödeme</span></div>
+        </div>
+      </a>
+      <a class="ccard cc-saha" href="#iletisim" data-cat="mobil" data-wa="Saha uygulaması" style="--c:#3df5a7">
+        <div class="cc-screen"><canvas data-scene="saha" aria-hidden="true"></canvas></div>
+        <div class="cc-body">
+          <div class="cc-top"><span class="cc-sub">03 · Konsept</span><span class="cc-arrow"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M9 6h9v9" fill="none" stroke="currentColor" stroke-width="2.4"/></svg></span></div>
+          <h3 class="cc-title">Saha uygulaması</h3>
+          <p class="cc-desc">Ekibin görevlerini, rotasını ve fotoğraflarını telefondan yönetir.</p>
+          <div class="cc-tags"><span>iOS</span><span>Android</span><span>Harita</span></div>
+        </div>
+      </a>
+      <a class="ccard cc-panel" href="#iletisim" data-cat="panel web" data-wa="Yönetim paneli" style="--c:#ff9d3d">
+        <div class="cc-screen"><canvas data-scene="panel" aria-hidden="true"></canvas></div>
+        <div class="cc-body">
+          <div class="cc-top"><span class="cc-sub">04 · Konsept</span><span class="cc-arrow"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M9 6h9v9" fill="none" stroke="currentColor" stroke-width="2.4"/></svg></span></div>
+          <h3 class="cc-title">Yönetim paneli</h3>
+          <p class="cc-desc">Satış, stok ve raporlar canlı. Excel’e veda.</p>
+          <div class="cc-tags"><span>Panel</span><span>Rapor</span></div>
+        </div>
+      </a>
+      <a class="ccard cc-qr" href="#iletisim" data-cat="mobil web" data-wa="QR menü" style="--c:#a78bfa">
+        <div class="cc-screen"><canvas data-scene="qr" aria-hidden="true"></canvas></div>
+        <div class="cc-body">
+          <div class="cc-top"><span class="cc-sub">05 · Konsept</span><span class="cc-arrow"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M9 6h9v9" fill="none" stroke="currentColor" stroke-width="2.4"/></svg></span></div>
+          <h3 class="cc-title">QR menü</h3>
+          <p class="cc-desc">Masadaki QR’ı okut, menü telefonda. Fiyatı panelden anında değiştir.</p>
+          <div class="cc-tags"><span>Mobil</span><span>QR</span></div>
+        </div>
+      </a>
+      <a class="ccard cc-mine" href="#iletisim" data-cat="web mobil panel ticaret" data-wa="Senin projen" data-mine style="--c:#FFD600">
+        <div class="cc-mine-grid" aria-hidden="true"></div>
+        <div class="cc-body">
+          <div class="cc-top"><span class="cc-sub">06 · Sırada</span><span class="cc-arrow"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M9 6h9v9" fill="none" stroke="currentColor" stroke-width="2.4"/></svg></span></div>
+          <h3 class="cc-title">Senin projen</h3>
+          <p class="cc-desc">Aklındaki fikri anlat, birlikte planlayalım. İlk görüşme ücretsiz.</p>
+          <div class="cc-tags"><span>WhatsApp’tan yaz</span></div>
+        </div>
+      </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Kaydırma hızına tepki veren dev şerit ============ -->
+  <section class="velo" aria-hidden="true">
+    <div class="velo-row" data-dir="1"><div class="velo-track"><span>Piksel piksel</span><i></i><span>Kusursuz kod</span><i></i><span>Piksel piksel</span><i></i><span>Kusursuz kod</span><i></i><span>Piksel piksel</span><i></i><span>Kusursuz kod</span><i></i></div></div>
+    <div class="velo-row" data-dir="-1"><div class="velo-track"><span class="o">Web</span><i></i><span class="o">Mobil</span><i></i><span class="o">E-ticaret</span><i></i><span class="o">Özel yazılım</span><i></i><span class="o">Web</span><i></i><span class="o">Mobil</span><i></i><span class="o">E-ticaret</span><i></i><span class="o">Özel yazılım</span><i></i></div></div>
+  </section>
+
+  <!-- ============ HİZMETLER: satır listesi + imleci izleyen önizleme ============ -->
+  <section class="services" id="hizmetler">
+    <canvas class="sv3d" id="sv3d" aria-hidden="true"></canvas>
+    <div class="sv-head">
+      <p class="subtitle-l">Hizmetler</p>
+      <h2 class="sv-title">Ne <span class="y">inşa</span> ediyorum?</h2>
+    </div>
+    <ul class="sv-list">
+      <li class="sv-row" data-prev="0"><a href="#iletisim"><span class="sv-num">01</span><span class="sv-name">Web siteleri</span><span class="sv-tags">Kurumsal · Landing · Blog</span><span class="sv-arrow" aria-hidden="true">↗</span></a></li>
+      <li class="sv-row" data-prev="1"><a href="#iletisim"><span class="sv-num">02</span><span class="sv-name">Mobil uygulamalar</span><span class="sv-tags">iOS · Android</span><span class="sv-arrow" aria-hidden="true">↗</span></a></li>
+      <li class="sv-row" data-prev="2"><a href="#iletisim"><span class="sv-num">03</span><span class="sv-name">E-ticaret</span><span class="sv-tags">Mağaza · Ödeme · Kargo</span><span class="sv-arrow" aria-hidden="true">↗</span></a></li>
+      <li class="sv-row" data-prev="3"><a href="#iletisim"><span class="sv-num">04</span><span class="sv-name">Özel yazılım</span><span class="sv-tags">Panel · CRM · Otomasyon</span><span class="sv-arrow" aria-hidden="true">↗</span></a></li>
+    </ul>
+    <div class="sv-preview" id="sv-preview" aria-hidden="true">
+      <div class="pv pv-0"><div class="dv-browser"><div class="bar"><i></i><i></i><i></i></div><div class="site"><b class="h"></b><b></b><b></b><b></b></div></div></div>
+      <div class="pv pv-1"><div class="dv-phone"><span></span><b class="on"></b><b></b><b></b><b></b></div></div>
+      <div class="pv pv-2"><div class="dv-browser"><div class="bar"><i></i><i></i><i></i></div><div class="store"><b></b><b class="on"></b><b></b><b></b><b></b><b class="on"></b></div></div></div>
+      <div class="pv pv-3"><div class="dv-browser"><div class="bar"><i></i><i></i><i></i></div><div class="dash"><b style="--h:.42"></b><b style="--h:.66"></b><b style="--h:.5"></b><b style="--h:.86"></b><b style="--h:.7"></b><b style="--h:.95"></b></div></div></div>
+    </div>
+  </section>
+
+  <!-- ============ SÜREÇ: üst üste binen kartlar ============ -->
+  <section class="process" id="surec">
+    <div class="pr-head">
+      <p class="subtitle-l dark">Süreç</p>
+      <h2 class="pr-title">Fikirden yayına<br>dört adım.</h2>
+    </div>
+    <div class="stack">
+      <article class="card" style="--i:0"><span class="card-num">01</span><div class="card-body"><h3>Keşif</h3><p>Bir görüşmede işini, müşterini ve hedefini dinlerim. Net bir kapsam ve sabit, uygun bir fiyatla dönerim.</p></div><span class="card-pix" aria-hidden="true"><i></i></span></article>
+      <article class="card" style="--i:1"><span class="card-num">02</span><div class="card-body"><h3>Tasarım</h3><p>Ekranları önce çizerim. Sen onaylamadan tek satır kod yazmam.</p></div><span class="card-pix" aria-hidden="true"><i></i><i></i></span></article>
+      <article class="card" style="--i:2"><span class="card-num">03</span><div class="card-body"><h3>Geliştirme</h3><p>Haftalık demolarla ilerlerim. Neyin bittiğini her hafta kendi gözünle görürsün.</p></div><span class="card-pix" aria-hidden="true"><i></i><i></i><i></i></span></article>
+      <article class="card" style="--i:3"><span class="card-num">04</span><div class="card-body"><h3>Yayın ve destek</h3><p>Siteni ya da uygulamanı yayına alırım. Sonrasında bakım ve güncellemeler için yanındayım.</p></div><span class="card-pix" aria-hidden="true"><i></i><i></i><i></i><i></i></span></article>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ FOOTER: dev BİZE YAZ ============ -->
+<footer class="footer" id="iletisim">
+  <canvas class="ft3d" id="ft3d" aria-hidden="true"></canvas>
+  <a class="ft-link" id="ft-link" href="#" target="_blank" rel="noopener">
+    <span class="ft-blob" aria-hidden="true"></span>
+    <span class="ft-titlewrap">
+      <span class="ft-title">Bana yaz</span>
+      <span class="ft-email">0551 489 08 33</span>
+    </span>
+  </a>
+  <div class="ft-bottom">
+    <p class="ft-legal">PIXELA.<br>TÜM HAKLARI SAKLIDIR.</p>
+    <div class="ft-socials">
+      <a href="https://instagram.com/pixela.tr" class="soc" target="_blank" rel="noopener" aria-label="Instagram: pixela.tr"><span class="soc-bg"></span><span>IG.</span><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 8 8 2M3 2h5v5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></a>
+      <a href="mailto:burakdeity@gmail.com" class="soc" aria-label="E-posta: burakdeity@gmail.com"><span class="soc-bg"></span><span>MAIL.</span><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 8 8 2M3 2h5v5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></a>
+      <a href="#" class="soc" id="soc-wa" target="_blank" rel="noopener" aria-label="WhatsApp"><span class="soc-bg"></span><span>WA.</span><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 8 8 2M3 2h5v5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></a>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/vendor/lenis.min.js"></script>
+<script src="assets/main.js"></script>
+<script src="assets/fx.js"></script>
+<script src="assets/reel.js"></script>
+<script src="assets/concepts.js"></script>
+<script src="assets/extra.js"></script>
+<script src="assets/transitions.js"></script>
+<script type="module" src="assets/scenes.js"></script>
+<script type="module" src="assets/wow3d.js"></script>
+</body>
+</html>
