@@ -651,3 +651,13 @@ html.hdr-off .header a,html.hdr-off .header button{pointer-events:none}
   .avatar{width:6.4rem;height:6.4rem;border-radius:1.6rem}
   .about-name{font-size:2.6rem}
 }
+
+/* telefon/tablet: bölümler arası boşluklar sıkılaştırıldı */
+@media (max-width:1024px){
+  .velo{padding:3.6rem 0}
+  .services{padding:6rem 3rem 8rem}
+  .sv-head{margin-bottom:1rem;gap:1.6rem}
+  .sv3d{min-height:24rem;height:24rem;margin:0 0 1rem}
+  .grid-sec{padding-top:8rem}
+  .process{padding-top:8rem;padding-bottom:9rem}
+}
