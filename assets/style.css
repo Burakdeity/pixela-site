@@ -636,3 +636,18 @@ html.hdr-off .header a,html.hdr-off .header button{pointer-events:none}
   .reel-next{bottom:calc(5rem + 100lvh - 100dvh)}
   @media (max-width:767px){.reel-bottom,.reel-next{bottom:calc(3rem + 100lvh - 100dvh)}}
 }
+/* profil kartı: dar ekranda taşmasın */
+.about-stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+.about-stats div{min-width:0}
+.about-stats dd{overflow-wrap:break-word}
+.about-cta{gap:1rem;white-space:nowrap}
+@media (max-width:767px){
+  .about-card{padding:2rem;gap:2rem}
+  .about-stats{gap:.6rem}
+  .about-stats div{padding:1.1rem .9rem;border-radius:1.2rem}
+  .about-stats dt{font-size:2rem}
+  .about-stats dd{font-size:1.15rem}
+  .about-cta{padding:1.5rem 2rem;font-size:1.6rem}
+  .avatar{width:6.4rem;height:6.4rem;border-radius:1.6rem}
+  .about-name{font-size:2.6rem}
+}
