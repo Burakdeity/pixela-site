@@ -1,5 +1,4 @@
-/* Girişte piksel dünya: altta iki katman piksel ufuk (tepeler + şehir), üstte kayan piksel bulutlar.
-   Fareyle katmanlar farklı hızlarda kayar (derinlik). */
+/* Girişte piksel bulutlar: farklı boy ve hızlarda kayar, fareyle hafif derinlik verir. */
 (() => {
   'use strict';
   const cv = document.getElementById('hero-pix');
@@ -7,58 +6,18 @@
   if (!cv || !hero) return;
   const c = cv.getContext('2d');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let W = 0, H = 0, dpr = 1, U = 6, hills = [], city = [], mx = 0, smx = 0;
+  let W = 0, H = 0, dpr = 1, U = 6, mx = 0, smx = 0;
 
   const CLOUD = ['..XXX....', '.XXXXX.XX', 'XXXXXXXXX'];
-  const clouds = [{ x: 0.06, y: 0.13, s: 1.3, v: 7 }, { x: 0.55, y: 0.09, s: 1, v: 5 }, { x: 0.82, y: 0.2, s: 0.8, v: 9 }];
+  const clouds = [{ x: 0.06, y: 0.13, s: 1.3, v: 7 }, { x: 0.55, y: 0.09, s: 1, v: 5 }, { x: 0.82, y: 0.2, s: 0.8, v: 9 }, { x: 0.32, y: 0.24, s: 0.7, v: 6 }, { x: 0.72, y: 0.05, s: 0.6, v: 4 }, { x: 0.18, y: 0.04, s: 0.55, v: 8 }];
 
   function size() {
     W = hero.clientWidth; H = hero.clientHeight;
     dpr = Math.min(2, devicePixelRatio || 1);
     cv.width = W * dpr; cv.height = H * dpr;
     U = W < 768 ? 5 : 7;
-    buildSkyline();
-  }
-  // sabit tohumlu rastgele: her açılışta aynı siluet
-  function rng(seed) { let s = seed; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; }
-  function buildSkyline() {
-    const B = U * 2, n = Math.ceil(W / B) + 12;
-    // tepeler: yumuşak dalga, basamak basamak
-    hills = [];
-    for (let i = 0; i < n; i++) hills.push(Math.round((Math.sin(i * 0.11) * 0.5 + Math.sin(i * 0.037 + 1) * 0.5 + 1) * 4 + 3));
-    // şehir: farklı boyda binalar, bazılarında pencere
-    city = []; const r = rng(7);
-    for (let i = 0; i < n;) {
-      const w = 2 + Math.floor(r() * 4), h = 4 + Math.floor(r() * 9), gap = r() < 0.3 ? 1 : 0;
-      city.push({ i, w, h, ant: r() < 0.25, win: r() < 0.6 });
-      i += w + gap;
-    }
   }
   addEventListener('pointermove', e => { mx = e.clientX / innerWidth - 0.5; }, { passive: true });
-  function skyline(t) {
-    const B = U * 2, base = H;
-    smx += (mx - smx) * 0.05;
-    // arka katman: tepeler
-    const o1 = -smx * 20 - B * 6;
-    c.fillStyle = 'rgba(214,150,0,.22)';
-    hills.forEach((h, i) => c.fillRect(Math.round(o1 + i * B), base - h * B, B + 1, h * B));
-    // ön katman: şehir
-    const o2 = -smx * 45 - B * 6;
-    city.forEach(b => {
-      const x = Math.round(o2 + b.i * B), w = b.w * B, h = b.h * B;
-      c.fillStyle = 'rgba(16,16,16,.09)'; c.fillRect(x, base - h, w, h);
-      if (b.ant) c.fillRect(x + Math.floor(b.w / 2) * B, base - h - B * 2, B / 2, B * 2);
-      if (b.win) {
-        for (let yy = 2; yy < b.h - 1; yy += 2) for (let xx = 0; xx < b.w; xx++) {
-          // pencereler arada bir yanıp söner
-          const on = Math.sin(b.i * 3.1 + xx * 1.7 + yy * 2.3 + Math.floor(t * 0.4 + b.i) * 1.3) > 0.55;
-          if (on) { c.fillStyle = 'rgba(255,255,255,.35)'; c.fillRect(x + xx * B + B * 0.3, base - h + yy * B + B * 0.3, B * 0.4, B * 0.4); }
-        }
-      }
-    });
-  }
-  addEventListener('resize', size);
-
   function cloud(x, y, s) {
     const u = U * s;
     c.fillStyle = 'rgba(255,255,255,.9)';
@@ -70,7 +29,7 @@
     const t = now / 1000, dt = Math.min(0.05, (now - (last || now)) / 1000); last = now;
     if (!W) size(); // boyut ölçülmeden çizme (bulut konumu bozulmasın)
     c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, H);
-    skyline(t);
+    smx += (mx - smx) * 0.05;
     clouds.forEach(cl => {
       if (!reduce) cl.x += cl.v * dt / W * 6;
       const cw = 9 * U * cl.s;
