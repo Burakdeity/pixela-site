@@ -664,3 +664,5 @@ html.hdr-off .header a,html.hdr-off .header button{pointer-events:none}
 /* Ben kimim başlığı: kartın altına girmesin, gerekirse alt satıra geçsin */
 .about .title .ln{white-space:normal}
 @media (min-width:1200px){.about .title{font-size:clamp(5rem,4.3vw,8.6rem)}.about{gap:5rem}}
+/* kayan yazı: üstteki piksel kenar (48px) yazının üstüne binmesin */
+.velo{padding-top:calc(48px + 2.4rem)!important}
