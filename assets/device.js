@@ -377,52 +377,8 @@ export function createDevice() {
   const holeGeo = new THREE.CircleGeometry(0.007, 10), holeMat = new THREE.MeshBasicMaterial({ color: 0x050506 });
   [-1, 1].forEach(sd => { for (let i = 0; i < 3; i++) for (let j = 0; j < 4; j++) { const h = new THREE.Mesh(holeGeo, holeMat); h.position.set(sd * (gx + sd * 0.06) + (i - 1) * 0.024 * sd, -0.43 + j * 0.022 - 0.0, gz + 0.001); group.add(h); } });
 
-  // ---------------- açılış: parçalar uçup yerine oturur ----------------
-  const parts = group.children.map((o, i) => {
-    const P = o.position.clone(), Q = o.quaternion.clone();
-    let d, off;
-    if (o === body) { d = 0; off = new THREE.Vector3(0, -0.4, -1.6); }
-    else if (o.geometry && o.geometry.type === 'ExtrudeGeometry') { d = 0.1; off = new THREE.Vector3(Math.sign(P.x) * 2.4, 0.2, 0.4); }
-    else if (o === glass || o === screen || o === gloss || o === logo) { d = 0.26; off = new THREE.Vector3(0, 1.6, 1.4); }
-    else { d = 0.38 + Math.random() * 0.3; off = new THREE.Vector3(P.x * 2.2 + (Math.random() - 0.5) * 0.8, P.y * 2.2 + (Math.random() - 0.5) * 0.8, 1.2 + Math.random() * 1.2); }
-    const spin = new THREE.Quaternion().setFromEuler(new THREE.Euler((Math.random() - 0.5) * 4, (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 4));
-    return { o, P, Q, d, off, R: spin.multiply(Q), S: o.scale.clone() };
-  });
-  const ASM = 1.7, BOOT = 1.3;
-  let asmT = -1; // -1: henüz başlamadı
-  const tq = new THREE.Quaternion();
-  const backOut = x => { const c1 = 1.4, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
-  function placeParts() {
-    const a = asmT < 0 ? 0 : asmT / ASM;
-    parts.forEach(pt => {
-      const k = clamp((a - pt.d) / 0.42, 0, 1), e = k <= 0 ? 0 : backOut(k);
-      pt.o.position.copy(pt.P).addScaledVector(pt.off, 1 - e);
-      tq.copy(pt.R).slerp(pt.Q, Math.min(1, ease(k)));
-      pt.o.quaternion.copy(tq);
-      pt.o.scale.copy(pt.S).multiplyScalar(Math.max(0.0001, Math.min(1, k * 2.2)));
-    });
-  }
-  placeParts();
-  function assemble(instant) { if (asmT >= 0) return; asmT = instant ? ASM + BOOT : 0; placeParts(); }
-  // açılış ekranı: piksel logo kare kare belirir, yükleme çubuğu dolar
-  const LOGO = [[0, 0], [1, 0], [2, 0], [0, 1], [2, 1], [0, 2], [1, 1]];
-  function bootScreen(c, k, t) {
-    c.fillStyle = '#0b0b10'; c.fillRect(0, 0, SW, SH);
-    const u = 30, ox = SW / 2 - u * 1.5, oy = SH / 2 - 92;
-    LOGO.forEach(([x, y], i) => {
-      const s2 = clamp(k * 9 - i * 0.7, 0, 1); if (!s2) return;
-      const sz = (u - 6) * backOut(s2);
-      c.fillStyle = Y; rr(c, ox + x * u + (u - sz) / 2, oy + y * u + (u - sz) / 2, sz, sz, 6);
-    });
-    const tk = clamp(k * 2 - 0.6, 0, 1);
-    c.globalAlpha = tk; c.font = '800 34px "Inter Tight", Arial, sans-serif'; c.fillStyle = WHITE; c.textAlign = 'center';
-    c.fillText('PIXELA', SW / 2, SH / 2 + 42); c.textAlign = 'left'; c.globalAlpha = 1;
-    rr(c, SW / 2 - 90, SH / 2 + 68, 180, 8, 4); c.fillStyle = 'rgba(255,255,255,.12)'; c.fill();
-    c.fillStyle = Y; rr(c, SW / 2 - 90, SH / 2 + 68, 180 * ease(clamp(k * 1.3 - 0.2, 0, 1)), 8, 4);
-  }
-
   // ---------------- etkileşim: düğmeler basılır, çubuklar fareye eğilir ----------------
-  const btns = group.children.filter(o => o.userData.btn && o.userData.btn !== 'stick').map(o => ({ o, z: parts.find(pt => pt.o === o).P.z, press: 0, dz: 0 }));
+  const btns = group.children.filter(o => o.userData.btn && o.userData.btn !== 'stick').map(o => ({ o, z: o.position.z, press: 0, dz: 0 }));
   const sticks = [stickL, stickR];
   let hovered = null, aimX = 0, aimY = 0, sx2 = 0, sy2 = 0, nowT = 0;
   const findBtn = obj => { while (obj && obj !== group) { if (obj.userData && obj.userData.btn) return obj; obj = obj.parent; } return null; };
@@ -431,7 +387,6 @@ export function createDevice() {
   function click(obj) {
     const b = findBtn(obj);
     if (b) { const it = btns.find(x => x.o === b); if (it) it.press = 1; if (b.userData.btn === 'stick') b.userData.kick = 1; }
-    if (asmT < ASM + BOOT) return;
     const name = b && b.userData.btn;
     if (name === 'right' || name === 'X') { next(); return; }
     if (name === 'left') { prev(); return; }
@@ -458,14 +413,6 @@ export function createDevice() {
 
   function update(dt, t) {
     nowT = t;
-    // kurulum ve açılış ekranı
-    if (asmT >= 0 && asmT < ASM + BOOT) {
-      asmT += dt; placeParts();
-      bootScreen(sc, clamp((asmT - ASM * 0.45) / (ASM * 0.55 + BOOT * 0.8), 0, 1), t);
-      screenTex.needsUpdate = true;
-      return;
-    }
-    if (asmT < 0) return;
     // düğmeler: üstüne gelince hafif, tıklayınca derin basılır
     const f = 1 - Math.pow(0.0005, dt);
     btns.forEach(it => {
@@ -497,7 +444,7 @@ export function createDevice() {
   }
 
   // ekranın o anki rengi: etrafa ışık olarak yayılır
-  const glowColor = () => asmT < ASM + BOOT ? '#ffd600' : CLIPS[trans > 0.5 ? nextIdx : idx].glow;
-  return { group, update, next, glowColor, hover, aim, click, assemble, hitTargets: [gloss, screen, body] };
+  const glowColor = () => CLIPS[trans > 0.5 ? nextIdx : idx].glow;
+  return { group, update, next, glowColor, hover, aim, click, hitTargets: [gloss, screen, body] };
 }
 export { CLIPS };

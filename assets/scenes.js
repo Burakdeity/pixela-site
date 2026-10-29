@@ -356,9 +356,7 @@ function hero2D(oldCanvas, section) {
 
   // açılış: yazı aşağıdan hafifçe dönerek yerine oturur (parçalanma yok)
   let ready = reduce.matches || !!window.__pixelaReady, introT = reduce.matches ? 9 : 0;
-  // açılış: konsol parçaları uçup yerine oturur, sonra ekran açılır
-  if (ready) device.assemble(reduce.matches);
-  document.addEventListener('pixela:ready', () => { ready = true; device.assemble(false); wake(); });
+  document.addEventListener('pixela:ready', () => { ready = true; wake(); });
 
   // fare: ekranın neresinde olursa olsun yazı oraya döner
   const target = new THREE.Vector2(0, 0);
@@ -447,7 +445,7 @@ function hero2D(oldCanvas, section) {
     dev.vx += ((dty - dev.x) * 38 - dev.vx * 7.5) * dt;
     dev.y += dev.vy * dt; dev.x += dev.vx * dt;
     const lk = 1 - de;
-    devWrap.rotation.set((dev.x + (1 - ie) * 0.25) * lk, (dev.y + (1 - ie) * 0.5) * lk, (-dev.y * 0.12 + (still ? 0 : Math.sin(t * 0.8) * 0.03)) * lk);
+    devWrap.rotation.set((dev.x + (1 - ie) * 0.8) * lk, (dev.y + (1 - ie) * 2.4) * lk, (-dev.y * 0.12 + (still ? 0 : Math.sin(t * 0.8) * 0.03)) * lk);
     devWrap.scale.setScalar(ready ? lay.ds * (0.6 + 0.4 * ie) : 0.0001);
     devWrap.position.set(lay.dx, lay.dy + (still ? 0 : Math.sin(t * 1.2) * 0.04) * lk + (1 - ie) * -0.8, mobile ? 0.4 : 0.9);
     if (dv < 0.62) device.update(dt, t); // video ekranı tamamen kaplayınca klip çizilmez
