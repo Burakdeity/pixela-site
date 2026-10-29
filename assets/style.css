@@ -588,3 +588,43 @@ html.hdr-off .header a,html.hdr-off .header button{pointer-events:none}
 .tagline .mask+.mask>span{background:var(--k);color:var(--y);padding:0 .24em .04em;border-radius:.22em}
 @media (max-width:767px){.tagline{font-size:clamp(2.2rem,6vw,3rem)!important}}
 .hero.on-device{cursor:pointer}
+
+/* ===== Ben kimim: kalın başlık + profil kartı ===== */
+.about{align-items:stretch}
+.about .titlewrap{display:flex;flex-direction:column}
+.about-kicker{position:static!important;display:inline-flex;align-items:center;gap:.8rem;align-self:flex-start;margin:0 0 2.4rem;padding:.7rem 1.4rem;border:2px solid var(--k);border-radius:99px;font-weight:700}
+.about-kicker i{width:.8rem;height:.8rem;background:var(--k);border-radius:2px}
+.about .title{font-weight:800;padding-top:0;letter-spacing:-.055em}
+@media (min-width:1200px){.about .title{font-size:clamp(6.4rem,5.6vw,10rem);line-height:.92}}
+.title .ln-hl{align-self:flex-start;background:var(--k);border-radius:.14em;padding:.02em .16em .06em;margin:.06em 0 .06em -.04em;transform:rotate(-1.5deg);transform-origin:left center}
+.title .ln-hl .ch{color:rgba(255,214,0,var(--a,.14))}
+.about-tags{display:flex;flex-wrap:wrap;gap:1rem;list-style:none;margin:3.6rem 0 0;padding:0}
+.about-tags li{padding:1rem 1.8rem;border-radius:99px;background:rgba(16,16,16,.08);font-size:1.6rem;font-weight:700;letter-spacing:-.02em;text-transform:uppercase}
+.about-tags s{text-decoration-thickness:.14em;text-decoration-color:var(--k)}
+.about-card{position:relative;flex:none;align-self:flex-end;width:100%;max-width:46rem;background:var(--k);color:#f2f2f2;border-radius:3.2rem;padding:3.2rem;display:flex;flex-direction:column;gap:2.6rem;box-shadow:0 3rem 6rem -2rem rgba(60,40,0,.45);transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .5s var(--ease-o)}
+@media (min-width:1200px){.about-card{width:42rem}}
+.about-top{display:flex;align-items:center;gap:1.8rem}
+.avatar{display:grid;grid-template-columns:repeat(9,1fr);gap:2px;width:8rem;height:8rem;padding:.8rem;border-radius:2rem;background:#1f1f25;flex:none}
+.avatar i{border-radius:2px;background:transparent;transition:background .15s}
+.avatar i.on{background:var(--y)}
+.avatar i.eye{background:#101010}
+.about-name{margin:0;font-size:3.2rem;font-weight:800;letter-spacing:-.04em;line-height:1}
+.about-role{margin:.6rem 0 0;font-size:1.4rem;color:rgba(242,242,242,.6);font-weight:600}
+.about-card .copy{width:auto!important;max-width:none;margin:0!important;align-self:auto!important;font-size:1.7rem;line-height:1.3;color:rgba(242,242,242,.82)}
+.about-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin:0}
+.about-stats div{background:#1f1f25;border-radius:1.6rem;padding:1.4rem 1.2rem}
+.about-stats dt{font-size:3rem;font-weight:800;color:var(--y);letter-spacing:-.04em;line-height:1}
+.about-stats dd{margin:.6rem 0 0;font-size:1.25rem;line-height:1.2;color:rgba(242,242,242,.65);font-weight:600}
+.about-cta{display:flex;justify-content:space-between;align-items:center;padding:1.8rem 2.4rem;border-radius:99px;background:var(--y);color:var(--k);font-size:1.8rem;font-weight:800;letter-spacing:-.03em;text-decoration:none;transition:transform .35s var(--ease-o)}
+.about-cta:hover{transform:scale(1.03)}
+.about-cta span{transition:transform .35s var(--ease-o)}
+.about-cta:hover span{transform:translateX(.5rem)}
+@media (max-width:767px){.about-card{padding:2.4rem;border-radius:2.6rem}.about-stats dt{font-size:2.4rem}.about-tags li{font-size:1.3rem}}
+.about .titlewrap{flex:1;min-width:0}
+@media (min-width:1200px){.about{gap:6rem}.about .title{font-size:clamp(5.6rem,4.9vw,9rem);line-height:1.02}.about-card{width:40rem}}
+.about .title{line-height:1.02}
+.title .ln-hl{margin:.1em 0 .12em -.04em}
+.avatar{grid-template-columns:repeat(7,1fr);gap:0;padding:0;overflow:hidden;background:var(--y)}
+.avatar i{border-radius:0}
+.avatar i.on{background:transparent}
+.avatar i.eye{background:#101010}

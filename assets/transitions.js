@@ -164,3 +164,37 @@
     setTimeout(tick, 35);
   })();
 })();
+
+/* Ben kimim kartı: piksel avatar (göz kırpar, gözleri fareyi izler) ve hafif 3D eğilme */
+(() => {
+  const av = document.getElementById('avatar'), card = document.getElementById('about-card');
+  if (!av || !card) return;
+  // 7x7 sarı piksel yüz: siyah gözler ve gülümseme
+  const N = 7, SMILE = [[1, 4], [5, 4], [2, 5], [3, 5], [4, 5]];
+  const cells = [];
+  for (let k = 0; k < N * N; k++) { const i = document.createElement('i'); av.appendChild(i); cells.push(i); }
+  const at = (x, y) => cells[y * N + x];
+  let ex = 0, ey = 0, blink = false;
+  function eyes() {
+    cells.forEach(c => c.classList.remove('eye'));
+    SMILE.forEach(([x, y]) => at(x, y).classList.add('eye'));
+    [2, 4].forEach(x => { at(x + ex, 2 + ey).classList.add('eye'); if (!blink) at(x + ex, 1 + ey).classList.add('eye'); });
+  }
+  eyes();
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce) return;
+  setInterval(() => { if (document.hidden) return; blink = true; eyes(); setTimeout(() => { blink = false; eyes(); }, 140); }, 3200);
+  addEventListener('pointermove', e => {
+    const r = av.getBoundingClientRect(), dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+    const nx = Math.abs(dx) > 80 ? Math.sign(dx) : 0, ny = 0;
+    if (nx !== ex || ny !== ey) { ex = nx; ey = ny; eyes(); }
+  }, { passive: true });
+  if (matchMedia('(hover: hover)').matches) {
+    card.addEventListener('pointermove', e => {
+      const r = card.getBoundingClientRect();
+      card.style.setProperty('--ry', ((e.clientX - r.left) / r.width - 0.5) * 10 + 'deg');
+      card.style.setProperty('--rx', -((e.clientY - r.top) / r.height - 0.5) * 10 + 'deg');
+    });
+    card.addEventListener('pointerleave', () => { card.style.setProperty('--rx', '0deg'); card.style.setProperty('--ry', '0deg'); });
+  }
+})();
