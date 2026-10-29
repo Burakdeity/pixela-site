@@ -661,3 +661,6 @@ html.hdr-off .header a,html.hdr-off .header button{pointer-events:none}
   .grid-sec{padding-top:8rem}
   .process{padding-top:8rem;padding-bottom:9rem}
 }
+/* Ben kimim başlığı: kartın altına girmesin, gerekirse alt satıra geçsin */
+.about .title .ln{white-space:normal}
+@media (min-width:1200px){.about .title{font-size:clamp(5rem,4.3vw,8.6rem)}.about{gap:5rem}}
