@@ -9,7 +9,10 @@
   let W = 0, H = 0, dpr = 1, U = 6, mx = 0, smx = 0;
 
   const CLOUD = ['..XXX....', '.XXXXX.XX', 'XXXXXXXXX'];
-  const clouds = [{ x: 0.06, y: 0.13, s: 1.3, v: 7 }, { x: 0.55, y: 0.09, s: 1, v: 5 }, { x: 0.82, y: 0.2, s: 0.8, v: 9 }, { x: 0.32, y: 0.24, s: 0.7, v: 6 }, { x: 0.72, y: 0.05, s: 0.6, v: 4 }, { x: 0.18, y: 0.04, s: 0.55, v: 8 }];
+  // düzenli şeritler: her sırada eşit aralıklı bulutlar, sıralar yarım aralık kaydırılmış (dama gibi).
+  // aynı sıradakiler aynı hızla kaydığı için aralıklar hiç bozulmaz.
+  const LANES = [{ y: 0.07, s: 0.7, v: 10, off: 0 }, { y: 0.17, s: 1.1, v: 14, off: 0.5 }, { y: 0.27, s: 0.85, v: 12, off: 0 }];
+  let shift = 0;
 
   function size() {
     W = hero.clientWidth; H = hero.clientHeight;
@@ -30,11 +33,15 @@
     if (!W) size(); // boyut ölçülmeden çizme (bulut konumu bozulmasın)
     c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, H);
     smx += (mx - smx) * 0.05;
-    clouds.forEach(cl => {
-      if (!reduce) cl.x += cl.v * dt / W * 6;
-      const cw = 9 * U * cl.s;
-      if (cl.x * W > W + 20) cl.x = -cw / W - 0.02;
-      cloud(cl.x * W - smx * 10 * cl.s, cl.y * H, cl.s);
+    if (!reduce) shift += dt;
+    const per = W < 768 ? 2 : 4, gap = W / per; // telefonda sırada 2, bilgisayarda 4 bulut
+    LANES.forEach(l => {
+      const cw = 9 * U * l.s, span = gap * (per + 1);
+      for (let k = 0; k <= per; k++) {
+        let x = (k + l.off) * gap + shift * l.v;
+        x = ((x % span) + span) % span - gap * 0.6 - cw / 2;
+        cloud(x - smx * 12 * l.s, l.y * H, l.s);
+      }
     });
     if (visible && !document.hidden && !reduce) requestAnimationFrame(frame); else running = false;
   }
