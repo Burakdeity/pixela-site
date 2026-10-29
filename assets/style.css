@@ -628,3 +628,11 @@ html.hdr-off .header a,html.hdr-off .header button{pointer-events:none}
 .avatar i{border-radius:0}
 .avatar i.on{background:transparent}
 .avatar i.eye{background:#101010}
+
+/* iPhone: araç çubuğu gizlenince ekran uzar; showreel uzun boyda olsun, alttaki başlık/ok görünen alanda kalsın */
+.reel-sticky{height:100vh;height:100lvh}
+@supports (height:100dvh){
+  .reel-bottom{bottom:calc(5rem + 100lvh - 100dvh)}
+  .reel-next{bottom:calc(5rem + 100lvh - 100dvh)}
+  @media (max-width:767px){.reel-bottom,.reel-next{bottom:calc(3rem + 100lvh - 100dvh)}}
+}
