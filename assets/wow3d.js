@@ -47,7 +47,8 @@ function browser() {
     const edge = x === 0 || x === W - 1 || y === 0 || y === H - 1, bar = y >= H - 3;
     const hero = y >= 5 && y <= 8 && x >= 2 && x <= 10, txt = (y === 3 && x >= 2 && x <= 8) || (y === 2 && x >= 2 && x <= 5);
     const card = y >= 2 && y <= 8 && x >= 13 && x <= 17 && (x === 13 || x === 17 || y === 2 || y === 8);
-    if (edge || bar) o.push([x, y, 0, 0]); else if (hero) o.push([x, y, 0, 1]); else if (txt || card) o.push([x, y, 0, 0]);
+    if (edge || bar) { o.push([x, y, 0, 0], [x, y, 1, 0]); } else if (hero) o.push([x, y, 0, 1]); else if (txt || card) o.push([x, y, 0, 0]);
+    if (y === H - 2 && (x === 2 || x === 4 || x === 6)) o.push([x, y, -1, 1]);
   }
   return o;
 }
@@ -57,7 +58,7 @@ function phone() {
     if ((x === 0 || x === W - 1) && (y === 0 || y === H - 1)) continue;
     const edge = x === 0 || x === W - 1 || y === 0 || y === H - 1, notch = y === H - 2 && x >= 3 && x <= 5;
     const block = y >= 10 && y <= 13 && x >= 2 && x <= 6, rows = (y === 7 || y === 5) && x >= 2 && x <= 6, home = y === 2 && x === 4;
-    if (edge || notch) o.push([x, y, 0, 0]); else if (block) o.push([x, y, 0, 1]); else if (rows || home) o.push([x, y, 0, 0]);
+    if (edge || notch) { o.push([x, y, 0, 0], [x, y, 1, 0]); } else if (block) o.push([x, y, 0, 1]); else if (rows || home) o.push([x, y, 0, 0]);
   }
   return o;
 }
@@ -68,6 +69,19 @@ function bag() {
   for (let a = 0; a <= 12; a++) {
     const t = Math.PI * a / 12, x = Math.round(4 - Math.cos(t) * 2.4), y = H + Math.round(Math.sin(t) * 3);
     o.push([x, y, 0, 1], [x, y, D - 1, 1]);
+  }
+  return o;
+}
+// özel yazılım: dişli çark (10 diş, ortası boş)
+function gear() {
+  const o = [], R = 6.5, r0 = 2.2, D = 3;
+  for (let x = -10; x <= 10; x++) for (let y = -10; y <= 10; y++) {
+    const d = Math.hypot(x, y), a = Math.atan2(y, x);
+    const tooth = Math.cos(a * 10) > 0.25 && d <= R + 2.2;
+    if ((d <= R || tooth) && d >= r0) for (let z = 0; z < D; z++) {
+      const surf = z === 0 || z === D - 1 || d > R - 1 || d < r0 + 1 || tooth;
+      if (surf) o.push([x, y, z, d < r0 + 1.2 ? 1 : 0]);
+    }
   }
   return o;
 }
@@ -82,7 +96,9 @@ function prep(list) {
   const mn = [1e9, 1e9, 1e9], mx = [-1e9, -1e9, -1e9];
   u.forEach(p => { for (let i = 0; i < 3; i++) { mn[i] = Math.min(mn[i], p[i]); mx[i] = Math.max(mx[i], p[i]); } });
   const c = [0, 1, 2].map(i => (mn[i] + mx[i]) / 2);
-  return { pts: u.map(p => [p[0] - c[0], p[1] - c[1], p[2] - c[2], p[3]]), ext: Math.max(mx[0] - mn[0], mx[1] - mn[1]) + 1 };
+  // döndükçe ekrana sığsın: genişlik olarak en kötü durumda x-z köşegeni
+  const ex = mx[0] - mn[0] + 1, ey = mx[1] - mn[1] + 1, ez = mx[2] - mn[2] + 1;
+  return { pts: u.map(p => [p[0] - c[0], p[1] - c[1], p[2] - c[2], p[3]]), ew: Math.hypot(ex, ez), eh: Math.hypot(ey, ez * 0.4) };
 }
 
 (function services() {
@@ -96,7 +112,7 @@ function prep(list) {
   const k1 = new THREE.DirectionalLight(0xffffff, 2.4); k1.position.set(-14, 18, 20); scene.add(k1);
   const k2 = new THREE.DirectionalLight(0xffd600, 1.6); k2.position.set(18, -8, -14); scene.add(k2);
 
-  const SHAPES = [cube(), browser(), phone(), bag(), bars()].map(prep);
+  const SHAPES = [cube(), browser(), phone(), bag(), gear()].map(prep);
   const N = Math.max(...SHAPES.map(s => s.pts.length));
   const mesh = new THREE.InstancedMesh(new THREE.BoxGeometry(0.86, 0.86, 0.86), new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.55, roughness: 0.28 }), N);
   mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
@@ -105,6 +121,9 @@ function prep(list) {
   const pos = new Float32Array(N * 3), tgt = new Float32Array(N * 3), scl = new Float32Array(N), tscl = new Float32Array(N), spd = new Float32Array(N), spin = new Float32Array(N * 2);
   for (let i = 0; i < N; i++) { spd[i] = 0.05 + rand() * 0.07; spin[i * 2] = rand() - 0.5; spin[i * 2 + 1] = rand() - 0.5; for (let a = 0; a < 3; a++) pos[i * 3 + a] = (rand() - 0.5) * 50; }
   let shape = -1, gS = 1, tS = 1, boost = 0, wake = () => {};
+  // görünen alanın %62'sine sığdır (heykel dönerken kenarlarda kesilmesin)
+  let vis = { w: 24, h: 24 };
+  function fitTo(s) { tS = Math.min(vis.w * 0.72 / s.ew, vis.h * 0.7 / s.eh, vis.h * 0.055); }
   function setShape(f) {
     if (f === shape) return; shape = f;
     const s = SHAPES[f], order = [...Array(N).keys()];
@@ -114,7 +133,9 @@ function prep(list) {
       tgt[idx * 3] = p[0]; tgt[idx * 3 + 1] = p[1]; tgt[idx * 3 + 2] = p[2]; tscl[idx] = on ? 1 : 0;
       mesh.setColorAt(idx, on && p[3] === 1 ? WHT : YEL);
     });
-    mesh.instanceColor.needsUpdate = true; tS = 15 / s.ext; boost = 1; wake();
+    mesh.instanceColor.needsUpdate = true; fitTo(s); boost = 1; wake();
+    // patlama: küpler önce dışa savrulur, sonra yeni şekle toplanır
+    if (!reduce) for (let i = 0; i < N; i++) { const x = pos[i * 3], y = pos[i * 3 + 1], l = Math.hypot(x, y) || 1, k = 2 + rand() * 3; pos[i * 3] += x / l * k; pos[i * 3 + 1] += y / l * k; pos[i * 3 + 2] += (rand() - 0.5) * 6; }
   }
   setShape(0);
   // satıra gelince o hizmetin şekli; listeden çıkınca piksel küp
@@ -126,7 +147,8 @@ function prep(list) {
 
   let mx = 0, my = 0, smx = 0, smy = 0;
   addEventListener('pointermove', e => { mx = e.clientX / innerWidth - 0.5; my = e.clientY / innerHeight - 0.5; }, { passive: true });
-  function size() { const w = canvas.clientWidth, h = canvas.clientHeight; if (!w || !h) return; r.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); }
+  function size() { const w = canvas.clientWidth, h = canvas.clientHeight; if (!w || !h) return; r.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix();
+    const vh = 2 * cam.position.z * Math.tan(THREE.MathUtils.degToRad(cam.fov / 2)); vis = { w: vh * cam.aspect, h: vh }; if (shape >= 0) { fitTo(SHAPES[shape]); gS = tS; } }
   addEventListener('resize', size); size();
   const d = new THREE.Object3D();
   wake = runWhileVisible(section, (dt, t) => {

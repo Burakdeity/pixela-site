@@ -52,6 +52,8 @@ function confetti(c, w, h, k, seed = 3) {
 }
 
 // 1) Bug avı: piksel karakter zıplayarak hataların üstünden atlar, kod jetonlarını toplar
+// konsola tıklanınca oyun karakteri ekstra zıplar (createDevice ayarlar)
+const poke = { t: -99, n: 0 };
 function clipGame(c, w, h, p, t) {
   const sky = c.createLinearGradient(0, 0, 0, h);
   sky.addColorStop(0, '#2a1060'); sky.addColorStop(0.6, '#b23aa8'); sky.addColorStop(1, '#ff8a3d');
@@ -88,7 +90,8 @@ function clipGame(c, w, h, p, t) {
   }
   // karakter: hatanın üstünden zıplar
   const dx = (((330 - scroll - HX) % S) + S) % S, j = (dx + 70) % S;
-  const jump = j < 150 ? Math.sin(Math.PI * j / 150) * 100 : 0;
+  const pj = t - poke.t, extra = pj >= 0 && pj < 0.75 ? Math.sin(Math.PI * pj / 0.75) * 150 : 0;
+  const jump = Math.max(j < 150 ? Math.sin(Math.PI * j / 150) * 100 : 0, extra);
   const hy = G0 - 34 - jump, squash = jump > 0 ? 0 : Math.abs(Math.sin(t * 16)) * 2;
   c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(HX + 16, G0 + 2, 18 - jump * 0.08, 4, 0, 0, 7); c.fill();
   c.fillStyle = '#ffd600'; rr(c, HX, hy + squash, 32, 34 - squash, 6);
@@ -97,7 +100,14 @@ function clipGame(c, w, h, p, t) {
   // skor paneli
   c.fillStyle = 'rgba(16,16,16,.55)'; rr(c, 16, 14, 150, 34, 10); rr(c, w - 148, 14, 132, 34, 10);
   txt(c, 'BUG AVI', 30, 37, 15, '#ffd600', 800);
-  txt(c, 'SKOR ' + String(Math.floor(scroll / S) * 10 + 120).padStart(4, '0'), w - 30, 37, 15, '#ffffff', 800, 'right');
+  txt(c, 'SKOR ' + String(Math.floor(scroll / S) * 10 + 120 + poke.n * 10).padStart(4, '0'), w - 30, 37, 15, '#ffffff', 800, 'right');
+  // zıplayınca "+10" ve yıldızlar
+  if (pj >= 0 && pj < 0.9) {
+    const a = 1 - pj / 0.9;
+    c.globalAlpha = a; txt(c, '+10', HX + 16, hy - 16 - pj * 40, 18, '#ffd600', 800, 'center');
+    for (let k = 0; k < 6; k++) { const an = k / 6 * Math.PI * 2, rr2 = 10 + pj * 60; c.fillStyle = k % 2 ? '#ffffff' : '#ffd600'; c.fillRect(HX + 16 + Math.cos(an) * rr2 - 3, G0 - 10 + Math.sin(an) * rr2 * 0.5 - 3, 6, 6); }
+    c.globalAlpha = 1;
+  }
 }
 
 // 2) Uygulama kuruluyor: parçalar yaylanarak telefona yerleşir, sonunda konfeti
@@ -327,7 +337,7 @@ export function createDevice() {
     const top = ch === 'A' ? yelMat : new THREE.MeshPhysicalMaterial({ map: letterTex(ch, col), roughness: 0.32, clearcoat: 0.8, clearcoatRoughness: 0.2 });
     const b = new THREE.Mesh(capGeo, [keyMat, ch === 'A' ? yelMat : top, keyMat]);
     if (ch === 'A') { const lt = new THREE.Mesh(new THREE.CircleGeometry(0.04, 24), new THREE.MeshBasicMaterial({ map: (() => { const cv = document.createElement('canvas'); cv.width = cv.height = 128; const c = cv.getContext('2d'); c.fillStyle = '#101010'; c.font = '800 74px "Inter Tight", Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('A', 64, 70); const t = new THREE.CanvasTexture(cv); return t; })(), transparent: true, depthWrite: false })); lt.position.z = 0.0175; b.add(lt); }
-    b.position.set(rx + x, 0.2 + y, gz + 0.006); group.add(b);
+    b.position.set(rx + x, 0.2 + y, gz + 0.006); b.userData.btn = ch; group.add(b);
   });
   // yön tuşları: dört ayrı yuvarlak düğme, üstlerinde ok
   function arrowTex(rot) {
@@ -336,20 +346,21 @@ export function createDevice() {
     c.fillStyle = '#e6e6ec'; c.beginPath(); c.moveTo(0, -30); c.lineTo(26, 16); c.lineTo(-26, 16); c.closePath(); c.fill();
     const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.center.set(0.5, 0.5); t.rotation = CAP_ROT; return t;
   }
-  [[0, 0.1, 0], [0.1, 0, Math.PI / 2], [0, -0.1, Math.PI], [-0.1, 0, -Math.PI / 2]].forEach(([x, y, r]) => {
+  [[0, 0.1, 0, 'up'], [0.1, 0, Math.PI / 2, 'right'], [0, -0.1, Math.PI, 'down'], [-0.1, 0, -Math.PI / 2, 'left']].forEach(([x, y, r, nm]) => {
     const top = new THREE.MeshPhysicalMaterial({ map: arrowTex(r), roughness: 0.32, clearcoat: 0.8, clearcoatRoughness: 0.2 });
     const b = new THREE.Mesh(capGeo, [keyMat, top, keyMat]);
-    b.position.set(lx + x, -0.17 + y, gz + 0.006); group.add(b);
+    b.position.set(lx + x, -0.17 + y, gz + 0.006); b.userData.btn = nm; group.add(b);
   });
   // analog çubuklar: yuva, sarı halka, kauçuk başlık, içbükey üst
   function stick(x, y) {
     const st = new THREE.Group(); st.position.set(x, y, gz);
     const well = new THREE.Mesh(new THREE.CylinderGeometry(0.083, 0.083, 0.012, 40), rubber); well.rotation.x = Math.PI / 2; st.add(well);
     const ring = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.007, 12, 48), yelMat); st.add(ring);
+    const head = new THREE.Group(); st.add(head); st.userData.head = head; st.userData.btn = 'stick';
     const capM = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.066, 0.05, 40), new THREE.MeshStandardMaterial({ color: 0x232329, roughness: 0.85 }));
-    capM.rotation.x = Math.PI / 2; capM.position.z = 0.03; st.add(capM);
-    const lip = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.011, 14, 40), new THREE.MeshStandardMaterial({ color: 0x2e2e36, roughness: 0.6 })); lip.position.z = 0.055; st.add(lip);
-    const dish = new THREE.Mesh(new THREE.CircleGeometry(0.05, 32), new THREE.MeshStandardMaterial({ color: 0x18181d, roughness: 0.95 })); dish.position.z = 0.052; st.add(dish);
+    capM.rotation.x = Math.PI / 2; capM.position.z = 0.03; head.add(capM);
+    const lip = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.011, 14, 40), new THREE.MeshStandardMaterial({ color: 0x2e2e36, roughness: 0.6 })); lip.position.z = 0.055; head.add(lip);
+    const dish = new THREE.Mesh(new THREE.CircleGeometry(0.05, 32), new THREE.MeshStandardMaterial({ color: 0x18181d, roughness: 0.95 })); dish.position.z = 0.052; head.add(dish);
     group.add(st); return st;
   }
   const stickL = stick(lx, 0.2), stickR = stick(rx, -0.17);
@@ -366,10 +377,73 @@ export function createDevice() {
   const holeGeo = new THREE.CircleGeometry(0.007, 10), holeMat = new THREE.MeshBasicMaterial({ color: 0x050506 });
   [-1, 1].forEach(sd => { for (let i = 0; i < 3; i++) for (let j = 0; j < 4; j++) { const h = new THREE.Mesh(holeGeo, holeMat); h.position.set(sd * (gx + sd * 0.06) + (i - 1) * 0.024 * sd, -0.43 + j * 0.022 - 0.0, gz + 0.001); group.add(h); } });
 
+  // ---------------- açılış: parçalar uçup yerine oturur ----------------
+  const parts = group.children.map((o, i) => {
+    const P = o.position.clone(), Q = o.quaternion.clone();
+    let d, off;
+    if (o === body) { d = 0; off = new THREE.Vector3(0, -0.4, -1.6); }
+    else if (o.geometry && o.geometry.type === 'ExtrudeGeometry') { d = 0.1; off = new THREE.Vector3(Math.sign(P.x) * 2.4, 0.2, 0.4); }
+    else if (o === glass || o === screen || o === gloss || o === logo) { d = 0.26; off = new THREE.Vector3(0, 1.6, 1.4); }
+    else { d = 0.38 + Math.random() * 0.3; off = new THREE.Vector3(P.x * 2.2 + (Math.random() - 0.5) * 0.8, P.y * 2.2 + (Math.random() - 0.5) * 0.8, 1.2 + Math.random() * 1.2); }
+    const spin = new THREE.Quaternion().setFromEuler(new THREE.Euler((Math.random() - 0.5) * 4, (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 4));
+    return { o, P, Q, d, off, R: spin.multiply(Q), S: o.scale.clone() };
+  });
+  const ASM = 1.7, BOOT = 1.3;
+  let asmT = -1; // -1: henüz başlamadı
+  const tq = new THREE.Quaternion();
+  const backOut = x => { const c1 = 1.4, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+  function placeParts() {
+    const a = asmT < 0 ? 0 : asmT / ASM;
+    parts.forEach(pt => {
+      const k = clamp((a - pt.d) / 0.42, 0, 1), e = k <= 0 ? 0 : backOut(k);
+      pt.o.position.copy(pt.P).addScaledVector(pt.off, 1 - e);
+      tq.copy(pt.R).slerp(pt.Q, Math.min(1, ease(k)));
+      pt.o.quaternion.copy(tq);
+      pt.o.scale.copy(pt.S).multiplyScalar(Math.max(0.0001, Math.min(1, k * 2.2)));
+    });
+  }
+  placeParts();
+  function assemble(instant) { if (asmT >= 0) return; asmT = instant ? ASM + BOOT : 0; placeParts(); }
+  // açılış ekranı: piksel logo kare kare belirir, yükleme çubuğu dolar
+  const LOGO = [[0, 0], [1, 0], [2, 0], [0, 1], [2, 1], [0, 2], [1, 1]];
+  function bootScreen(c, k, t) {
+    c.fillStyle = '#0b0b10'; c.fillRect(0, 0, SW, SH);
+    const u = 30, ox = SW / 2 - u * 1.5, oy = SH / 2 - 92;
+    LOGO.forEach(([x, y], i) => {
+      const s2 = clamp(k * 9 - i * 0.7, 0, 1); if (!s2) return;
+      const sz = (u - 6) * backOut(s2);
+      c.fillStyle = Y; rr(c, ox + x * u + (u - sz) / 2, oy + y * u + (u - sz) / 2, sz, sz, 6);
+    });
+    const tk = clamp(k * 2 - 0.6, 0, 1);
+    c.globalAlpha = tk; c.font = '800 34px "Inter Tight", Arial, sans-serif'; c.fillStyle = WHITE; c.textAlign = 'center';
+    c.fillText('PIXELA', SW / 2, SH / 2 + 42); c.textAlign = 'left'; c.globalAlpha = 1;
+    rr(c, SW / 2 - 90, SH / 2 + 68, 180, 8, 4); c.fillStyle = 'rgba(255,255,255,.12)'; c.fill();
+    c.fillStyle = Y; rr(c, SW / 2 - 90, SH / 2 + 68, 180 * ease(clamp(k * 1.3 - 0.2, 0, 1)), 8, 4);
+  }
+
+  // ---------------- etkileşim: düğmeler basılır, çubuklar fareye eğilir ----------------
+  const btns = group.children.filter(o => o.userData.btn && o.userData.btn !== 'stick').map(o => ({ o, z: parts.find(pt => pt.o === o).P.z, press: 0, dz: 0 }));
+  const sticks = [stickL, stickR];
+  let hovered = null, aimX = 0, aimY = 0, sx2 = 0, sy2 = 0, nowT = 0;
+  const findBtn = obj => { while (obj && obj !== group) { if (obj.userData && obj.userData.btn) return obj; obj = obj.parent; } return null; };
+  function hover(obj) { hovered = findBtn(obj); return !!obj; }
+  function aim(x, y) { aimX = clamp(x, -1, 1); aimY = clamp(y, -1, 1); }
+  function click(obj) {
+    const b = findBtn(obj);
+    if (b) { const it = btns.find(x => x.o === b); if (it) it.press = 1; if (b.userData.btn === 'stick') b.userData.kick = 1; }
+    if (asmT < ASM + BOOT) return;
+    const name = b && b.userData.btn;
+    if (name === 'right' || name === 'X') { next(); return; }
+    if (name === 'left') { prev(); return; }
+    if (CLIPS[trans > 0 ? nextIdx : idx].draw === clipGame) { poke.t = nowT; poke.n++; clipT = Math.min(clipT, CLIP_LEN - 2.5); }
+    else next();
+  }
+
   // klip oynatıcı
-  let idx = 0, clipT = 0, trans = 0, nextIdx = 1;
+  let idx = 0, clipT = 0, trans = 0, nextIdx = 1, dir = 1;
   const CLIP_LEN = 4.6, TRANS = 0.6;
-  function next() { if (trans > 0) return; nextIdx = (idx + 1) % CLIPS.length; trans = 0.0001; }
+  function next() { if (trans > 0) return; dir = 1; nextIdx = (idx + 1) % CLIPS.length; trans = 0.0001; }
+  function prev() { if (trans > 0) return; dir = -1; nextIdx = (idx - 1 + CLIPS.length) % CLIPS.length; trans = 0.0001; }
 
   function overlay(c, label, t) {
     // hafif kenar gölgesi
@@ -383,15 +457,39 @@ export function createDevice() {
   }
 
   function update(dt, t) {
+    nowT = t;
+    // kurulum ve açılış ekranı
+    if (asmT >= 0 && asmT < ASM + BOOT) {
+      asmT += dt; placeParts();
+      bootScreen(sc, clamp((asmT - ASM * 0.45) / (ASM * 0.55 + BOOT * 0.8), 0, 1), t);
+      screenTex.needsUpdate = true;
+      return;
+    }
+    if (asmT < 0) return;
+    // düğmeler: üstüne gelince hafif, tıklayınca derin basılır
+    const f = 1 - Math.pow(0.0005, dt);
+    btns.forEach(it => {
+      it.press = Math.max(0, it.press - dt * 4);
+      const tgt = (hovered === it.o ? 0.007 : 0) + Math.sin(Math.min(1, it.press) * Math.PI) * 0.016;
+      it.dz += (tgt - it.dz) * f; it.o.position.z = it.z - it.dz;
+    });
+    // analog çubuklar fareye doğru eğilir
+    sx2 += (aimX - sx2) * f * 0.6; sy2 += (aimY - sy2) * f * 0.6;
+    sticks.forEach(st => {
+      const k = st.userData.kick || 0; st.userData.kick = Math.max(0, k - dt * 3);
+      const hv = hovered === st ? 1.6 : 1;
+      st.userData.head.rotation.set(-sy2 * 0.42 * hv, sx2 * 0.42 * hv, 0);
+      st.userData.head.position.z = -Math.sin(Math.min(1, k) * Math.PI) * 0.02;
+    });
     clipT += dt;
     if (trans === 0 && clipT > CLIP_LEN) next();
     const p = clamp(clipT / CLIP_LEN, 0, 1);
     if (trans > 0) {
-      // yumuşak kayma: eski klip sola kayar, yenisi sağdan gelir
+      // yumuşak kayma: eski klip yana kayar, yenisi diğer taraftan gelir
       trans += dt / TRANS;
-      const k = ease(Math.min(1, trans)), off = k * SW;
+      const k = ease(Math.min(1, trans)), off = k * SW * dir;
       sc.save(); sc.translate(-off, 0); CLIPS[idx].draw(sc, SW, SH, 1, t); sc.restore();
-      sc.save(); sc.translate(SW - off, 0); CLIPS[nextIdx].draw(sc, SW, SH, 0, t); sc.restore();
+      sc.save(); sc.translate(SW * dir - off, 0); CLIPS[nextIdx].draw(sc, SW, SH, 0, t); sc.restore();
       if (trans >= 1) { idx = nextIdx; clipT = 0; trans = 0; }
     } else CLIPS[idx].draw(sc, SW, SH, p, t);
     overlay(sc, CLIPS[idx].label, t);
@@ -399,7 +497,7 @@ export function createDevice() {
   }
 
   // ekranın o anki rengi: etrafa ışık olarak yayılır
-  const glowColor = () => CLIPS[trans > 0.5 ? nextIdx : idx].glow;
-  return { group, update, next, glowColor, hitTargets: [gloss, screen, body] };
+  const glowColor = () => asmT < ASM + BOOT ? '#ffd600' : CLIPS[trans > 0.5 ? nextIdx : idx].glow;
+  return { group, update, next, glowColor, hover, aim, click, assemble, hitTargets: [gloss, screen, body] };
 }
 export { CLIPS };

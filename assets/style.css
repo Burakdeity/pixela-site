@@ -587,3 +587,4 @@ html.hdr-off .header a,html.hdr-off .header button{pointer-events:none}
 .tagline .mask+.mask{margin-left:.22em}
 .tagline .mask+.mask>span{background:var(--k);color:var(--y);padding:0 .24em .04em;border-radius:.22em}
 @media (max-width:767px){.tagline{font-size:clamp(2.2rem,6vw,3rem)!important}}
+.hero.on-device{cursor:pointer}

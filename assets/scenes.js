@@ -312,10 +312,17 @@ function hero2D(oldCanvas, section) {
     const r = canvas.getBoundingClientRect();
     ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
     hitRay.setFromCamera(ndc, camera);
-    return hitRay.intersectObjects(device.hitTargets, false).length > 0;
+    const h = hitRay.intersectObject(device.group, true);
+    return h.length ? h[0].object : null;
   }
-  // cihaza tıklayınca sonraki video (imleç değişmez)
-  section.addEventListener('click', e => { if (e.target.closest('a, button')) return; if (deviceHit(e)) { device.next(); if (window.__pixelaBlip) window.__pixelaBlip(520, 0.12, 'square', 0.04); } });
+  // konsol: düğmelerin üstüne gelince basılır, tıklayınca oyun karakteri zıplar / klip değişir
+  let hoverQ = false;
+  section.addEventListener('pointermove', e => {
+    if (hoverQ || scrollY > innerHeight * 0.05) return; hoverQ = true;
+    requestAnimationFrame(() => { hoverQ = false; const o = deviceHit(e); device.hover(o); section.classList.toggle('on-device', !!o); });
+  }, { passive: true });
+  section.addEventListener('pointerleave', () => { device.hover(null); section.classList.remove('on-device'); });
+  section.addEventListener('click', e => { if (e.target.closest('a, button')) return; const o = deviceHit(e); if (o) device.click(o); });
 
   // kare kare piksel yazı: küpler tek bir gövde olarak birlikte döner, asla dağılmaz
   const GLYPHS = {
@@ -349,13 +356,16 @@ function hero2D(oldCanvas, section) {
 
   // açılış: yazı aşağıdan hafifçe dönerek yerine oturur (parçalanma yok)
   let ready = reduce.matches || !!window.__pixelaReady, introT = reduce.matches ? 9 : 0;
-  document.addEventListener('pixela:ready', () => { ready = true; wake(); });
+  // açılış: konsol parçaları uçup yerine oturur, sonra ekran açılır
+  if (ready) device.assemble(reduce.matches);
+  document.addEventListener('pixela:ready', () => { ready = true; device.assemble(false); wake(); });
 
   // fare: ekranın neresinde olursa olsun yazı oraya döner
   const target = new THREE.Vector2(0, 0);
   let moved = false;
   addEventListener('pointermove', e => {
     target.set((e.clientX / innerWidth) * 2 - 1, -((e.clientY / innerHeight) * 2 - 1));
+    device.aim(target.x, target.y);
     moved = true;
     wake();
   }, { passive: true });
@@ -437,7 +447,7 @@ function hero2D(oldCanvas, section) {
     dev.vx += ((dty - dev.x) * 38 - dev.vx * 7.5) * dt;
     dev.y += dev.vy * dt; dev.x += dev.vx * dt;
     const lk = 1 - de;
-    devWrap.rotation.set((dev.x + (1 - ie) * 0.8) * lk, (dev.y + (1 - ie) * 2.4) * lk, (-dev.y * 0.12 + (still ? 0 : Math.sin(t * 0.8) * 0.03)) * lk);
+    devWrap.rotation.set((dev.x + (1 - ie) * 0.25) * lk, (dev.y + (1 - ie) * 0.5) * lk, (-dev.y * 0.12 + (still ? 0 : Math.sin(t * 0.8) * 0.03)) * lk);
     devWrap.scale.setScalar(ready ? lay.ds * (0.6 + 0.4 * ie) : 0.0001);
     devWrap.position.set(lay.dx, lay.dy + (still ? 0 : Math.sin(t * 1.2) * 0.04) * lk + (1 - ie) * -0.8, mobile ? 0.4 : 0.9);
     if (dv < 0.62) device.update(dt, t); // video ekranı tamamen kaplayınca klip çizilmez
