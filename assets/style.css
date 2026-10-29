@@ -671,3 +671,5 @@ html.hdr-off .header a,html.hdr-off .header button{pointer-events:none}
 html.ready .hero-pix{opacity:1}
 .hero.diving .hero-pix{opacity:0;transition-delay:0s}
 .hero-foot{justify-content:space-between}
+.ft-seo{display:inline-block;margin-top:.6rem;color:inherit;opacity:.55;text-decoration:none;font-size:1.1rem}
+.ft-seo:hover{opacity:1}
