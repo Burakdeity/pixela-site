@@ -670,3 +670,4 @@ html.hdr-off .header a,html.hdr-off .header button{pointer-events:none}
 .hero-pix{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0;transition:opacity .8s var(--ease) .6s}
 html.ready .hero-pix{opacity:1}
 .hero.diving .hero-pix{opacity:0;transition-delay:0s}
+.hero-foot{justify-content:space-between}
